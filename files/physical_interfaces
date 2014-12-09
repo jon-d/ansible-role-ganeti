@@ -1,0 +1,8 @@
+auto eth0                   
+iface eth0 inet manual      
+       pre-up ip link set eth0 up
+
+auto eth1                   
+iface eth1 inet manual      
+       pre-up ip link set eth1 up
+

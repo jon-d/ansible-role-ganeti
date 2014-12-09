@@ -1,0 +1,17 @@
+- name: Install openvswitch
+  apt: pkg={{ item }} state=installed
+  with_items:
+      - openvswitch-switch
+      - openvswitch-brcompat
+      - openvswitch-pki
+      - openvswitch-datapath-dkms
+
+- name: Copy openvswitch-switch init script
+  copy: src=../files/openvswitch-switch dest=/etc/init.d/openvswitch-switch
+
+- name: Make openvswitch-switch executable
+  file: path=/etc/init.d/openvswitch-switch mode=755
+
+#- name: Configure openvswitch
+#  shell: "ovs-vsctl add-br vsw0 ; ovs-vsctl add-port vsw0 eth0; ovs-vsctl set Port eth0 tag=0 -- set Port eth0 vlan_mode=native-untagged -- set Port eth0 tag=604; ovs-vsctl add-port vsw0 veth0 -- set interface veth0 type=internal -- set Port veth0 -- set Port veth0 vlan_mode=trunk; ifup veth0.604;"
+#  when: ansible_interfaces["vsw0"] is not defined

@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# Original script is copyrighted by Google Inc.
+# VLAN on openvswitch is copyrighted by lepharphacien from geekpharmacy.
+# Modified by Darryl Ross  February 2013
+#
+# Copyright (C) 2011 Google Inc.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+LOGFILE=/tmp/ganeti-vif-${INSTANCE}-${INTERFACE_INDEX}-${INTERFACE}
+set > ${LOGFILE}
+
+if [ -z "${INTERFACE}" ]; then
+    echo "No network interface specified" >> ${LOGFILE}
+    exit 1
+fi
+if [ -z "${MODE}" || "${MODE}" != "bridge" ]; then
+    echo "MODE not specified or not supported" >> ${LOGFILE}
+    exit 1
+fi
+
+# Remove the port from any existing bridges (ports are not
+# automatically removed when the VM is shut down, so we do not
+# want to reuse the existing port)
+echo /usr/bin/ovs-vsctl del-port ${INTERFACE} >> ${LOGFILE}
+/usr/bin/ovs-vsctl del-port ${INTERFACE} >> ${LOGFILE} 2>&1
+
+# Bring the tap interface up
+echo /sbin/ip link set ${INTERFACE} up >> ${LOGFILE}
+/sbin/ip link set ${INTERFACE} up >> ${LOGFILE} 2>&1
+
+# If we migrate an instance booted with the old config, the bridge names
+# are still the old values, lets overwrite...
+echo "Testing ${LINK} for legacy bridge name..." >> ${LOGFILE}
+if [ "$( echo ${LINK} | cut -c -3 )" == "vbr" ]; then
+    echo "Overriding LINK to vsw0"
+    LINK=vsw0
+elif [ "${LINK}" == "veth1" ]; then
+    echo "Overriding LINK to vsw1"
+    LINK=vsw1
+fi
+
+# Connect the interface to the bridge
+echo /usr/bin/ovs-vsctl add-port ${LINK} ${INTERFACE} >> ${LOGFILE}
+/usr/bin/ovs-vsctl add-port ${LINK} ${INTERFACE} >> ${LOGFILE} 2>&1
+
+# See if we need to tag or limit the trunk VLANs
+if [ ! -z "${TAGS}" ]; then
+    for tag in ${TAGS}; do
+        echo ${tag}|egrep "^vif${INTERFACE_INDEX}:">/dev/null && (
+            action=`echo ${tag} | sed -r 's/vif[0-9]:([^:]+):.*/\1/'`
+            params=`echo ${tag} | sed -r 's/vif[0-9]:([^:]+):(.*)/\2/'`
+            echo "action=${action} params=${params}" >> ${LOGFILE}
+            if [ "${action}" == "tag" ]; then
+                echo "Inside TAG" >> ${LOGFILE}
+                echo /usr/bin/ovs-vsctl set port ${INTERFACE} tag=${params} >> ${LOGFILE}
+                /usr/bin/ovs-vsctl set port ${INTERFACE} tag=${params} >> ${LOGFILE} 2>&1
+            elif [ "${action}" == "trunk" ]; then
+                echo "Inside TRUNK" >> ${LOGFILE}
+                echo /usr/bin/ovs-vsctl set port ${INTERFACE} trunks=`echo ${params}|sed 's/:/,/g'` >> ${LOGFILE}
+                /usr/bin/ovs-vsctl set port ${INTERFACE} trunks=`echo ${params}|sed 's/:/,/g'` >> ${LOGFILE} 2>&1
+            fi
+        )
+    done
+fi
+exit 0

@@ -1,0 +1,6 @@
+- name: install physical network interfaces configuration
+  copy: src=physical_interfaces dest=/etc/network/interfaces.d/physical_interfaces
+
+- name: Configure ganeti interface
+  template: src=ganeti_interface dest=/etc/network/interfaces.d/{{ ganeti_interface }}
+

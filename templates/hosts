@@ -1,0 +1,10 @@
+127.0.0.1	localhost
+::1		localhost ip6-localhost ip6-loopback
+ff02::1		ip6-allnodes
+ff02::2		ip6-allrouters
+
+{{ ganeti_cluster_ip }} {{ ganeti_cluster_name }}{{ ganeti_domain }} {{ ganeti_cluster_name }}
+
+{% for h in groups['ganeti_nodes'] %}
+{{ hostvars[h]['ganeti_ip'] }} {{ hostvars[h][hostname_inventory_short] }}{{ ganeti_domain }} {{ hostvars[h][hostname_inventory_short] }}
+{% endfor %}

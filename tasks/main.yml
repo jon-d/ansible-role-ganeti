@@ -1,0 +1,7 @@
+- include: openvswitch.yml
+- include: ganeti.yml
+- include: interfaces.yml
+
+- name: install custom post-up interface script for openssh-server
+  copy: src=openssh-server dest=/etc/network/if-up.d/openssh-server
+

@@ -1,0 +1,5 @@
+auto {{ ganeti_interface }}
+iface {{ ganeti_interface }} inet static
+	address {{ ganeti_ip }}
+	netmask {{ ganeti_netmask }}
+

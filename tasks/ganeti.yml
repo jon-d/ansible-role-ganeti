@@ -1,0 +1,19 @@
+- name: Install ganeti packages
+  apt: pkg={{ item }} state=installed
+  with_items:
+      - ganeti2
+      - ganeti-htools
+      - qemu
+
+- name: Configure drbd
+  copy: src=modprobe-drbd.conf dest=/etc/modprobe.d/drbd.conf
+
+- name: Fill /etc/hosts
+  template: src=../templates/hosts dest=/etc/hosts
+
+- name: Install ganeti virtual networking scripts
+  copy: src=../files/kvm-vif-bridge dest=/etc/ganeti/kvm-vif-bridge
+
+- name: Make kvm-vif-bridge executable
+  file: path=/etc/ganeti/kvm-vif-bridge mode=755
+

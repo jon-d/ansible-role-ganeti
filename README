@@ -1,0 +1,34 @@
+ansible-role-ganeti
+===============
+
+This ansible role install a ganeti node with openvswitch.
+
+It has been writen for a ganeti deployment where the physical ports on each
+node are dedicated to openvswitch which is talking LACP with the physical
+switch in front of it. So the physical machines and the virtual machines are
+all plugged in openvswitch, each with a specific vlan configuration.
+
+Still, openvswitch configuration is not yet included in this role, so
+everything related to openvswitch should be configured by hand.
+
+Configuration
+-------------
+
+Every ganeti node should be in the ``ganeti_nodes`` inventory group.
+
+Common variables in the ``ganeti_nodes`` group :
+
+  - ganeti_cluster_name, ganeti cluster name,
+  - ganeti_cluster_ip, IP address of the cluster,
+  - ganeti_domain, ganeti cluster domain name
+  - ganeti_netmask, netmask of the ganeti network, defaults to 255.255.255.0.
+
+Variables specific to a node
+
+  - ganeti_interface, interface where internal traffic is exchanged between the
+    cluster members,
+  - ganeti_ip, IP adress dedicated to ganeti on the node.
+
+The ``ganeti_interface`` variable should set on the group level and overloaded
+for specific nodes as needed.
+
